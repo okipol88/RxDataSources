@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import RxSwift
 
 func indexSet(values: [Int]) -> NSIndexSet {
     let indexSet = NSMutableIndexSet()
@@ -58,7 +59,28 @@ extension UITableView : SectionedViewType {
     }
 }
 
+private var afterUpdatesHoldertKey: UInt8 = 0
+
 extension UICollectionView : SectionedViewType {
+    
+    var afterUpdatesHolder: PublishSubject<Void> {
+        get {
+            guard let subject = (objc_getAssociatedObject(self, &afterUpdatesHoldertKey) as? PublishSubject<Void> ) else {
+                let subject = PublishSubject<Void>()
+                objc_setAssociatedObject(self, &afterUpdatesHoldertKey, subject , objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
+                return subject
+            }
+            
+            return subject
+        }
+    }
+
+    public var afterUpdates: Observable<Void> {
+        get {
+            return self.afterUpdatesHolder.asObservable()
+        }
+    }
+    
     public func insertItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation) {
         self.insertItemsAtIndexPaths(paths)
     }
@@ -94,7 +116,8 @@ extension UICollectionView : SectionedViewType {
   public func performBatchUpdates<S: SectionModelType>(changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
         self.performBatchUpdates({ () -> Void in
             _performBatchUpdates(self, changes: changes, animationConfiguration: animationConfiguration)
-        }, completion: { (completed: Bool) -> Void in
+        }, completion: { [weak self] (completed: Bool) -> Void in
+            self?.afterUpdatesHolder.onNext()
         })
     }
 }
