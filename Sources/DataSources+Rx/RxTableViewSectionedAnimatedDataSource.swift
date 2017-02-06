@@ -13,8 +13,8 @@ import RxSwift
 import RxCocoa
 #endif
 
-public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelType>
-    : RxTableViewSectionedDataSource<S>
+open class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelType>
+    : TableViewSectionedDataSource<S>
     , RxTableViewDataSourceType {
     
     public typealias Element = [S]
@@ -26,7 +26,7 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
         super.init()
     }
 
-    public func tableView(tableView: UITableView, observedEvent: Event<Element>) {
+    open func tableView(_ tableView: UITableView, observedEvent: Event<Element>) {
         UIBindingObserver(UIElement: self) { dataSource, newSections in
             #if DEBUG
                 self._dataSourceBound = true
@@ -37,10 +37,16 @@ public class RxTableViewSectionedAnimatedDataSource<S: AnimatableSectionModelTyp
                 tableView.reloadData()
             }
             else {
-                dispatch_async(dispatch_get_main_queue()) {
+                DispatchQueue.main.async {
+                    // if view is not in view hierarchy, performing batch updates will crash the app
+                    if tableView.window == nil {
+                        dataSource.setSections(newSections)
+                        tableView.reloadData()
+                        return
+                    }
                     let oldSections = dataSource.sectionModels
                     do {
-                        let differences = try differencesForSectionedView(oldSections, finalSections: newSections)
+                        let differences = try differencesForSectionedView(initialSections: oldSections, finalSections: newSections)
 
                         for difference in differences {
                             dataSource.setSections(difference.finalSections)

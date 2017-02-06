@@ -40,12 +40,12 @@ class CustomizationUsingTableViewDelegate : UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        tableView.registerClass(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
 
         let dataSource = RxTableViewSectionedAnimatedDataSource<MySection>()
 
         dataSource.configureCell = { ds, tv, ip, item in
-            let cell = tv.dequeueReusableCellWithIdentifier("Cell") ?? UITableViewCell(style: .Default, reuseIdentifier: "Cell")
+            let cell = tv.dequeueReusableCell(withIdentifier: "Cell") ?? UITableViewCell(style: .default, reuseIdentifier: "Cell")
             cell.textLabel?.text = "Item \(item)"
 
             return cell
@@ -67,10 +67,10 @@ class CustomizationUsingTableViewDelegate : UIViewController {
         ]
 
         Observable.just(sections)
-            .bindTo(tableView.rx_itemsWithDataSource(dataSource))
+            .bindTo(tableView.rx.items(dataSource: dataSource))
             .addDisposableTo(disposeBag)
 
-        tableView.rx_setDelegate(self)
+        tableView.rx.setDelegate(self)
             .addDisposableTo(disposeBag)
 
         self.dataSource = dataSource
@@ -78,12 +78,12 @@ class CustomizationUsingTableViewDelegate : UIViewController {
 }
 
 extension CustomizationUsingTableViewDelegate : UITableViewDelegate {
-    func tableView(tableView: UITableView, heightForRowAtIndexPath indexPath: NSIndexPath) -> CGFloat {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
 
         // you can also fetch item
-        guard let item = dataSource?.itemAtIndexPath(indexPath),
+        guard let item = dataSource?[indexPath],
         // .. or section and customize what you like
-            _ = dataSource?.sectionAtIndex(indexPath.section)
+            let _ = dataSource?[indexPath.section]
             else {
             return 0.0
         }

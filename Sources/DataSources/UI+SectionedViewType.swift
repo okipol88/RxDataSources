@@ -8,51 +8,55 @@
 
 import Foundation
 import UIKit
-import RxSwift
 
-func indexSet(values: [Int]) -> NSIndexSet {
+#if !RX_NO_MODULE
+    import RxSwift
+#endif
+
+
+func indexSet(_ values: [Int]) -> IndexSet {
     let indexSet = NSMutableIndexSet()
     for i in values {
-        indexSet.addIndex(i)
+        indexSet.add(i)
     }
-    return indexSet
+    return indexSet as IndexSet
 }
 
 extension UITableView : SectionedViewType {
-  
-    public func insertItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation) {
-        self.insertRowsAtIndexPaths(paths, withRowAnimation: animationStyle)
+    
+    public func insertItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
+        self.insertRows(at: paths, with: animationStyle)
     }
     
-    public func deleteItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation) {
-        self.deleteRowsAtIndexPaths(paths, withRowAnimation: animationStyle)
+    public func deleteItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
+        self.deleteRows(at: paths, with: animationStyle)
     }
     
-    public func moveItemAtIndexPath(from: NSIndexPath, to: NSIndexPath) {
-        self.moveRowAtIndexPath(from, toIndexPath: to)
+    public func moveItemAtIndexPath(_ from: IndexPath, to: IndexPath) {
+        self.moveRow(at: from, to: to)
     }
     
-    public func reloadItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation) {
-        self.reloadRowsAtIndexPaths(paths, withRowAnimation: animationStyle)
+    public func reloadItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
+        self.reloadRows(at: paths, with: animationStyle)
     }
     
-    public func insertSections(sections: [Int], animationStyle: UITableViewRowAnimation) {
-        self.insertSections(indexSet(sections), withRowAnimation: animationStyle)
+    public func insertSections(_ sections: [Int], animationStyle: UITableViewRowAnimation) {
+        self.insertSections(indexSet(sections), with: animationStyle)
     }
     
-    public func deleteSections(sections: [Int], animationStyle: UITableViewRowAnimation) {
-        self.deleteSections(indexSet(sections), withRowAnimation: animationStyle)
+    public func deleteSections(_ sections: [Int], animationStyle: UITableViewRowAnimation) {
+        self.deleteSections(indexSet(sections), with: animationStyle)
     }
     
-    public func moveSection(from: Int, to: Int) {
+    public func moveSection(_ from: Int, to: Int) {
         self.moveSection(from, toSection: to)
     }
     
-    public func reloadSections(sections: [Int], animationStyle: UITableViewRowAnimation) {
-        self.reloadSections(indexSet(sections), withRowAnimation: animationStyle)
+    public func reloadSections(_ sections: [Int], animationStyle: UITableViewRowAnimation) {
+        self.reloadSections(indexSet(sections), with: animationStyle)
     }
-
-  public func performBatchUpdates<S: SectionModelType>(changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
+    
+    public func performBatchUpdates<S: SectionModelType>(_ changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
         self.beginUpdates()
         _performBatchUpdates(self, changes: changes, animationConfiguration: animationConfiguration)
         self.endUpdates()
@@ -63,7 +67,12 @@ private var afterUpdatesHoldertKey: UInt8 = 0
 
 extension UICollectionView : SectionedViewType {
     
-    var afterUpdatesHolder: PublishSubject<Void> {
+    public func insertItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
+        self.insertItems(at: paths)
+        
+    }
+    
+    public var afterUpdatesHolder: PublishSubject<Void> {
         get {
             guard let subject = (objc_getAssociatedObject(self, &afterUpdatesHoldertKey) as? PublishSubject<Void> ) else {
                 let subject = PublishSubject<Void>()
@@ -74,46 +83,47 @@ extension UICollectionView : SectionedViewType {
             return subject
         }
     }
-
+    
     public var afterUpdates: Observable<Void> {
         get {
-            return self.afterUpdatesHolder.asObservable()
+            return self.afterUpdatesHolder as Observable
         }
     }
     
     public func insertItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation) {
-        self.insertItemsAtIndexPaths(paths)
+        self.insertItems(at: paths as [IndexPath])
+        
     }
     
-    public func deleteItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation) {
-        self.deleteItemsAtIndexPaths(paths)
-    }
-
-    public func moveItemAtIndexPath(from: NSIndexPath, to: NSIndexPath) {
-        self.moveItemAtIndexPath(from, toIndexPath: to)
+    public func deleteItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
+        self.deleteItems(at: paths)
     }
     
-    public func reloadItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation) {
-        self.reloadItemsAtIndexPaths(paths)
+    public func moveItemAtIndexPath(_ from: IndexPath, to: IndexPath) {
+        self.moveItem(at: from, to: to)
     }
     
-    public func insertSections(sections: [Int], animationStyle: UITableViewRowAnimation) {
+    public func reloadItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
+        self.reloadItems(at: paths)
+    }
+    
+    public func insertSections(_ sections: [Int], animationStyle: UITableViewRowAnimation) {
         self.insertSections(indexSet(sections))
     }
     
-    public func deleteSections(sections: [Int], animationStyle: UITableViewRowAnimation) {
+    public func deleteSections(_ sections: [Int], animationStyle: UITableViewRowAnimation) {
         self.deleteSections(indexSet(sections))
     }
     
-    public func moveSection(from: Int, to: Int) {
+    public func moveSection(_ from: Int, to: Int) {
         self.moveSection(from, toSection: to)
     }
     
-    public func reloadSections(sections: [Int], animationStyle: UITableViewRowAnimation) {
+    public func reloadSections(_ sections: [Int], animationStyle: UITableViewRowAnimation) {
         self.reloadSections(indexSet(sections))
     }
     
-  public func performBatchUpdates<S: SectionModelType>(changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
+    public func performBatchUpdates<S: SectionModelType>(_ changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
         self.performBatchUpdates({ () -> Void in
             _performBatchUpdates(self, changes: changes, animationConfiguration: animationConfiguration)
         }, completion: { [weak self] (completed: Bool) -> Void in
@@ -123,22 +133,22 @@ extension UICollectionView : SectionedViewType {
 }
 
 public protocol SectionedViewType {
-    func insertItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation)
-    func deleteItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation)
-    func moveItemAtIndexPath(from: NSIndexPath, to: NSIndexPath)
-    func reloadItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation)
+    func insertItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation)
+    func deleteItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation)
+    func moveItemAtIndexPath(_ from: IndexPath, to: IndexPath)
+    func reloadItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation)
     
-    func insertSections(sections: [Int], animationStyle: UITableViewRowAnimation)
-    func deleteSections(sections: [Int], animationStyle: UITableViewRowAnimation)
-    func moveSection(from: Int, to: Int)
-    func reloadSections(sections: [Int], animationStyle: UITableViewRowAnimation)
-
-    func performBatchUpdates<S>(changes: Changeset<S>, animationConfiguration: AnimationConfiguration)
+    func insertSections(_ sections: [Int], animationStyle: UITableViewRowAnimation)
+    func deleteSections(_ sections: [Int], animationStyle: UITableViewRowAnimation)
+    func moveSection(_ from: Int, to: Int)
+    func reloadSections(_ sections: [Int], animationStyle: UITableViewRowAnimation)
+    
+    func performBatchUpdates<S>(_ changes: Changeset<S>, animationConfiguration: AnimationConfiguration)
 }
 
-func _performBatchUpdates<V: SectionedViewType, S: SectionModelType>(view: V, changes: Changeset<S>, animationConfiguration:AnimationConfiguration) {
+func _performBatchUpdates<V: SectionedViewType, S: SectionModelType>(_ view: V, changes: Changeset<S>, animationConfiguration:AnimationConfiguration) {
     typealias I = S.Item
-  
+    
     view.deleteSections(changes.deletedSections, animationStyle: animationConfiguration.deleteAnimation)
     // Updated sections doesn't mean reload entire section, somebody needs to update the section view manually
     // otherwise all cells will be reloaded for nothing.
@@ -149,22 +159,22 @@ func _performBatchUpdates<V: SectionedViewType, S: SectionModelType>(view: V, ch
     }
     
     view.deleteItemsAtIndexPaths(
-        changes.deletedItems.map { NSIndexPath(forItem: $0.itemIndex, inSection: $0.sectionIndex) },
+        changes.deletedItems.map { IndexPath(item: $0.itemIndex, section: $0.sectionIndex) },
         animationStyle: animationConfiguration.deleteAnimation
     )
     view.insertItemsAtIndexPaths(
-        changes.insertedItems.map { NSIndexPath(forItem: $0.itemIndex, inSection: $0.sectionIndex) },
+        changes.insertedItems.map { IndexPath(item: $0.itemIndex, section: $0.sectionIndex) },
         animationStyle: animationConfiguration.insertAnimation
     )
     view.reloadItemsAtIndexPaths(
-        changes.updatedItems.map { NSIndexPath(forItem: $0.itemIndex, inSection: $0.sectionIndex) },
+        changes.updatedItems.map { IndexPath(item: $0.itemIndex, section: $0.sectionIndex) },
         animationStyle: animationConfiguration.reloadAnimation
     )
     
     for (from, to) in changes.movedItems {
         view.moveItemAtIndexPath(
-            NSIndexPath(forItem: from.itemIndex, inSection: from.sectionIndex),
-            to: NSIndexPath(forItem: to.itemIndex, inSection: to.sectionIndex)
+            IndexPath(item: from.itemIndex, section: from.sectionIndex),
+            to: IndexPath(item: to.itemIndex, section: to.sectionIndex)
         )
     }
 }

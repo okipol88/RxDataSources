@@ -3,6 +3,54 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.2](https://github.com/RxSwiftCommunity/RxDataSources/releases/tag/1.0.2)
+
+* Fixes issue with performing batch updates on view that is not in view hierarchy.
+
+## [1.0.1](https://github.com/RxSwiftCommunity/RxDataSources/releases/tag/1.0.1)
+
+* Fixes invalid version in bundle id.
+* Update CFBundleShortVersionString to current release version number.
+
+## [1.0.0](https://github.com/RxSwiftCommunity/RxDataSources/releases/tag/1.0.0)
+
+* Small polish of public interface.
+
+## [1.0.0-rc.2](https://github.com/RxSwiftCommunity/RxDataSources/releases/tag/1.0.0-rc.2)
+
+#### Features
+
+* Makes rest of data source classes and methods open.
+* Small polish for UI.
+* Removes part of deprecated extensions.
+
+## [1.0.0-rc.1](https://github.com/RxSwiftCommunity/RxDataSources/releases/tag/1.0.0-rc.1)
+
+#### Features
+
+* Makes data sources open.
+* Adaptations for RxSwift 3.0.0-rc.1
+
+## [1.0.0-beta.2](https://github.com/RxSwiftCommunity/RxDataSources/releases/tag/1.0.0-beta.2)
+
+#### Features
+
+* Adaptations for Swift 3.0
+
+#### Fixes
+
+* Improves collection view animated updates behavior.
+
+## [1.0.0.beta.1](https://github.com/RxSwiftCommunity/RxDataSources/releases/tag/1.0.0.beta.1)
+
+#### Features
+
+* Adaptations for Swift 3.0
+
+#### Fixes
+
+* Fixes `moveItem`
+
 ## [0.9](https://github.com/RxSwiftCommunity/RxDataSources/releases/tag/0.8.1)
 
 #### Possibly breaking changes
