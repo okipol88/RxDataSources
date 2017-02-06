@@ -9,6 +9,11 @@
 import Foundation
 import UIKit
 
+#if !RX_NO_MODULE
+    import RxSwift
+#endif
+
+
 func indexSet(_ values: [Int]) -> IndexSet {
     let indexSet = NSMutableIndexSet()
     for i in values {
@@ -18,7 +23,7 @@ func indexSet(_ values: [Int]) -> IndexSet {
 }
 
 extension UITableView : SectionedViewType {
-  
+    
     public func insertItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
         self.insertRows(at: paths, with: animationStyle)
     }
@@ -50,23 +55,49 @@ extension UITableView : SectionedViewType {
     public func reloadSections(_ sections: [Int], animationStyle: UITableViewRowAnimation) {
         self.reloadSections(indexSet(sections), with: animationStyle)
     }
-
-  public func performBatchUpdates<S: SectionModelType>(_ changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
+    
+    public func performBatchUpdates<S: SectionModelType>(_ changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
         self.beginUpdates()
         _performBatchUpdates(self, changes: changes, animationConfiguration: animationConfiguration)
         self.endUpdates()
     }
 }
 
+private var afterUpdatesHoldertKey: UInt8 = 0
+
 extension UICollectionView : SectionedViewType {
+    
     public func insertItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
         self.insertItems(at: paths)
+        
+        var afterUpdatesHolder: PublishSubject<Void> {
+            get {
+                guard let subject = (objc_getAssociatedObject(self, &afterUpdatesHoldertKey) as? PublishSubject<Void> ) else {
+                    let subject = PublishSubject<Void>()
+                    objc_setAssociatedObject(self, &afterUpdatesHoldertKey, subject , objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN)
+                    return subject
+                }
+                
+                return subject
+            }
+        }
+    }
+    
+    public var afterUpdates: Observable<Void> {
+        get {
+            return self.afterUpdatesHolder.asObservable()
+        }
+    }
+    
+    public func insertItemsAtIndexPaths(paths: [NSIndexPath], animationStyle: UITableViewRowAnimation) {
+        self.insertItemsAtIndexPaths(paths)
+
     }
     
     public func deleteItemsAtIndexPaths(_ paths: [IndexPath], animationStyle: UITableViewRowAnimation) {
         self.deleteItems(at: paths)
     }
-
+    
     public func moveItemAtIndexPath(_ from: IndexPath, to: IndexPath) {
         self.moveItem(at: from, to: to)
     }
@@ -91,10 +122,11 @@ extension UICollectionView : SectionedViewType {
         self.reloadSections(indexSet(sections))
     }
     
-  public func performBatchUpdates<S: SectionModelType>(_ changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
+    public func performBatchUpdates<S: SectionModelType>(_ changes: Changeset<S>, animationConfiguration: AnimationConfiguration) {
         self.performBatchUpdates({ () -> Void in
             _performBatchUpdates(self, changes: changes, animationConfiguration: animationConfiguration)
-        }, completion: { (completed: Bool) -> Void in
+        }, completion: { [weak self] (completed: Bool) -> Void in
+            self?.afterUpdatesHolder.onNext()
         })
     }
 }
@@ -109,13 +141,13 @@ public protocol SectionedViewType {
     func deleteSections(_ sections: [Int], animationStyle: UITableViewRowAnimation)
     func moveSection(_ from: Int, to: Int)
     func reloadSections(_ sections: [Int], animationStyle: UITableViewRowAnimation)
-
+    
     func performBatchUpdates<S>(_ changes: Changeset<S>, animationConfiguration: AnimationConfiguration)
 }
 
 func _performBatchUpdates<V: SectionedViewType, S: SectionModelType>(_ view: V, changes: Changeset<S>, animationConfiguration:AnimationConfiguration) {
     typealias I = S.Item
-  
+    
     view.deleteSections(changes.deletedSections, animationStyle: animationConfiguration.deleteAnimation)
     // Updated sections doesn't mean reload entire section, somebody needs to update the section view manually
     // otherwise all cells will be reloaded for nothing.
